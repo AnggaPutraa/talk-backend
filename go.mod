@@ -7,6 +7,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.5.0
 	github.com/spf13/viper v1.18.2
+	golang.org/x/crypto v0.17.0
 )
 
 require (
