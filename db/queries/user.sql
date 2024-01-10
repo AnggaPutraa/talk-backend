@@ -9,7 +9,7 @@ INSERT INTO users (
   $3
 ) RETURNING *;
 
--- name: GetUserById :one
+-- name: GetUserByEmail :one
 SELECT *
 FROM users
-WHERE id = $1;
+WHERE email = $1;
