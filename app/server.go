@@ -39,6 +39,7 @@ func (s *Server) setupRouter() {
 	authRoute := apiGroup.Group("/auth")
 	authRoute.POST("/register", s.authHanlder.Register)
 	authRoute.POST("/login", s.authHanlder.Login)
+	s.router = router
 }
 
 func (s *Server) start(address string) error {
