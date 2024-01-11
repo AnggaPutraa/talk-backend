@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/AnggaPutraa/talk-backend/app/auth"
+	"github.com/AnggaPutraa/talk-backend/app/ws"
 	"github.com/AnggaPutraa/talk-backend/configs"
 	db "github.com/AnggaPutraa/talk-backend/db/sqlc"
 	"github.com/AnggaPutraa/talk-backend/utils"
@@ -9,13 +10,18 @@ import (
 )
 
 type Server struct {
-	config      configs.Config
-	strategy    utils.Strategy
-	authHanlder auth.AuthHandler
-	router      *gin.Engine
+	config           configs.Config
+	strategy         utils.Strategy
+	authHanlder      auth.AuthHandler
+	webSocketHandler ws.WebSocketHandler
+	router           *gin.Engine
 }
 
-func NewServer(config configs.Config, autHander auth.AuthHandler) (*Server, error) {
+func NewServer(
+	config configs.Config,
+	autHander auth.AuthHandler,
+	webSocketHandler ws.WebSocketHandler,
+) (*Server, error) {
 	server := &Server{
 		config: config,
 		strategy: utils.NewJWTStrategy(
@@ -39,6 +45,11 @@ func (s *Server) setupRouter() {
 	authRoute := apiGroup.Group("/auth")
 	authRoute.POST("/register", s.authHanlder.Register)
 	authRoute.POST("/login", s.authHanlder.Login)
+	webSocketRoute := apiGroup.Group("/ws/room")
+	webSocketRoute.GET("/", s.webSocketHandler.GetRooms)
+	webSocketRoute.POST("/", s.webSocketHandler.CreateRoom)
+	webSocketRoute.GET("/join/:id", s.webSocketHandler.JoinRoom)
+	webSocketRoute.GET("/:id/client", s.webSocketHandler.GetClientsByRoomId)
 	s.router = router
 }
 
@@ -49,6 +60,8 @@ func (s *Server) start(address string) error {
 func RunServer(config configs.Config, query db.Querier) {
 	authService, _ := auth.NewAuthService(config, query)
 	authHandler := auth.NewAuthHandler(*authService)
-	server, _ := NewServer(config, *authHandler)
+	hub := ws.NewHub()
+	webSocketHandler := ws.NewWebSocketHandler(hub)
+	server, _ := NewServer(config, *authHandler, *webSocketHandler)
 	server.start(config.ServerAddress)
 }
