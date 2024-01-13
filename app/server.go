@@ -28,7 +28,8 @@ func NewServer(
 			config.AccessTokenSecret,
 			config.RefreshTokenSecret,
 		),
-		authHanlder: autHander,
+		authHanlder:      autHander,
+		webSocketHandler: webSocketHandler,
 	}
 	server.setupRouter()
 	return server, nil
@@ -60,8 +61,9 @@ func (s *Server) start(address string) error {
 func RunServer(config configs.Config, query db.Querier) {
 	authService, _ := auth.NewAuthService(config, query)
 	authHandler := auth.NewAuthHandler(*authService)
-	hub := ws.NewHub()
-	webSocketHandler := ws.NewWebSocketHandler(hub)
+	hub, _ := ws.NewHub()
+	webSocketHandler := ws.NewWebSocketHandler(*hub)
 	server, _ := NewServer(config, *authHandler, *webSocketHandler)
+	go hub.Run()
 	server.start(config.ServerAddress)
 }

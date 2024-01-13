@@ -23,28 +23,29 @@ func (c *Client) writeMessage() {
 		if !ok {
 			return
 		}
+
 		c.Conn.WriteJSON(message)
 	}
 }
 
-func (c *Client) readMessage(h *Hub) {
+func (c *Client) readMessage(hub *Hub) {
 	defer func() {
-		h.Unregister <- c
+		hub.Unregister <- c
 		c.Conn.Close()
 	}()
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		_, m, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		newMessage := &Message{
-			Content:  string(message),
+		msg := &Message{
+			Content:  string(m),
 			RoomId:   c.RoomId,
 			Username: c.Username,
 		}
-		h.Broadcast <- newMessage
+		hub.Broadcast <- msg
 	}
 }

@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/AnggaPutraa/talk-backend/exceptions"
@@ -8,10 +9,10 @@ import (
 )
 
 type WebSocketHandler struct {
-	hub *Hub
+	hub Hub
 }
 
-func NewWebSocketHandler(h *Hub) *WebSocketHandler {
+func NewWebSocketHandler(h Hub) *WebSocketHandler {
 	return &WebSocketHandler{
 		hub: h,
 	}
@@ -37,27 +38,32 @@ func (h *WebSocketHandler) JoinRoom(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, exceptions.ErrorResponse(err))
 		return
 	}
-	var queries JoinRoomQueryParam
-	if err := c.ShouldBind(&queries); err != nil {
+	var uriParam JoinRoomURIParam
+	if err := c.ShouldBindUri(&uriParam); err != nil {
+		c.JSON(http.StatusBadRequest, exceptions.ErrorResponse(err))
+		return
+	}
+	var formParam JoinRoomFormParam
+	if err := c.ShouldBind(&formParam); err != nil {
 		c.JSON(http.StatusBadRequest, exceptions.ErrorResponse(err))
 		return
 	}
 	client := &Client{
 		Conn:     connection,
 		Message:  make(chan *Message, 10),
-		Id:       queries.ClientId,
-		RoomId:   queries.Id,
-		Username: queries.Username,
+		Id:       formParam.ClientId,
+		RoomId:   uriParam.Id,
+		Username: formParam.Username,
 	}
 	message := &Message{
-		Content:  "A new user has joined the room",
-		RoomId:   queries.Id,
-		Username: queries.Username,
+		Content:  fmt.Sprintf("A new user named %s has joined the room", formParam.Username),
+		RoomId:   uriParam.Id,
+		Username: formParam.Username,
 	}
 	h.hub.Register <- client
 	h.hub.Broadcast <- message
 	go client.writeMessage()
-	client.readMessage(h.hub)
+	client.readMessage(&h.hub)
 }
 
 func (h *WebSocketHandler) GetRooms(c *gin.Context) {

@@ -19,8 +19,11 @@ type GetClientByRoomIdResponse struct {
 	Username string `json:"username" binding:"required"`
 }
 
-type JoinRoomQueryParam struct {
-	Id       string `form:"roomId" binding:"required"`
+type JoinRoomFormParam struct {
 	ClientId string `form:"clientId" binding:"required"`
 	Username string `form:"username" binding:"required"`
+}
+
+type JoinRoomURIParam struct {
+	Id string `uri:"id" binding:"required"`
 }

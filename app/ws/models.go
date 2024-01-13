@@ -2,7 +2,7 @@ package ws
 
 type Message struct {
 	Content  string `json:"content"`
-	RoomId   string `json:"roomId"`
+	RoomId   string `json:"room_id"`
 	Username string `json:"username"`
 }
 

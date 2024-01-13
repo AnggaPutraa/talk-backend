@@ -7,13 +7,14 @@ type Hub struct {
 	Broadcast  chan *Message
 }
 
-func NewHub() *Hub {
-	return &Hub{
+func NewHub() (*Hub, error) {
+	hub := &Hub{
 		Rooms:      make(map[string]*Room),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Broadcast:  make(chan *Message, 5),
 	}
+	return hub, nil
 }
 
 func (h *Hub) Run() {
